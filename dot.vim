@@ -277,11 +277,14 @@ function! s:DOT_createChildNode(dokozonoLineNum)
     "echoe 'dest:' . lastNode.title
     "echoe 'lineNumToInsert:' . lineNumToInsert
 
+    let sttype = getbufvar(buffNum, 'DOT_type')
+    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+
     call s:Text_insertHeading(
                 \ lineNumToInsert,
                 \ title,
                 \ node.level + 1,
-                \ 's:DOT__dotDecorateHeading')
+                \ 'g:DOT_' . sttype . 'DecorateHeading')
 
     if inTreeBuffer
         call s:DOT_execute(line('.'))
@@ -391,8 +394,11 @@ function! s:DOT_incLevel(dokoLineNum1, dokoLineNum2)
     let lastNode = s:Node_getNextNode(s:Node_getLastDescendantNode(node2))
     let node = node1
 
+    let sttype = getbufvar(buffNum, 'DOT_type')
+    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+
     while node isnot lastNode
-        call s:Text_setHeading(node.title, node.level + 1, node.lineNum, 's:DOT__dotSetHeading')
+        call s:Text_setHeading(node.title, node.level + 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
         let node = s:Node_getNextNode(node)
     endwhile
 
@@ -445,10 +451,13 @@ function! s:DOT_decLevel(dokoLineNum1, dokoLineNum2)
         let node = s:Node_getNextNode(node)
     endwhile
 
+    let sttype = getbufvar(buffNum, 'DOT_type')
+    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+
     " run
     let node = node1
     while node isnot lastNode
-        call s:Text_setHeading(node.title, node.level - 1, node.lineNum, 's:DOT__dotSetHeading')
+        call s:Text_setHeading(node.title, node.level - 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
         let node = s:Node_getNextNode(node)
     endwhile
 
@@ -490,7 +499,14 @@ function! s:DOT_flipUpward(dokoLineNum1, dokoLineNum2)
         let node2 = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum2)
     endif
 
-    let destNode = s:Node_getPrevNode(node1)
+    let lastNode1 = s:Node_getLastDescendantNode(node1)
+    let lastNode2 = s:Node_getLastDescendantNode(node2)
+    if s:Node_getNodeIndex(b:DOT_rootNode, lastNode1) < s:Node_getNodeIndex(b:DOT_rootNode, lastNode2)
+        let destNode = s:Node_getNextNode(lastNode1)
+    else
+        let destNode = s:Node_getNextNode(lastNode2)
+    endif
+    "let destNode = s:Node_getPrevNode(node1)
 
     " error
     if s:DOT__nodeIsTerminator(node1) || s:DOT__nodeIsTerminator(node2)
@@ -537,7 +553,13 @@ function! s:DOT_flipDownward(dokoLineNum1, dokoLineNum2)
         let node2 = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum2)
     endif
 
-    let destNode = s:Node_getNextNode(node2)
+    let lastNode1 = s:Node_getLastDescendantNode(node1)
+    let lastNode2 = s:Node_getLastDescendantNode(node2)
+    if s:Node_getNodeIndex(b:DOT_rootNode, lastNode1) < s:Node_getNodeIndex(b:DOT_rootNode, lastNode2)
+        let destNode = s:Node_getNextNode(lastNode1)
+    else
+        let destNode = s:Node_getNextNode(lastNode2)
+    endif
 
     " error
     if s:DOT__nodeIsTerminator(node1) || s:DOT__nodeIsTerminator(node2)
@@ -668,11 +690,16 @@ endfunction
 function! s:DOT__buildNodeTree(buffNum)
     let rootNode = s:Node_create(':ROOT:', 0, 0)
 
+    let sttype = getbufvar(a:buffNum, 'DOT_type')
+    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+
+    let Init = function('g:DOT_' . sttype . 'Init')
+    call Init()
     let headings = s:Text_collectHeadings(
                         \ a:buffNum, 
-                        \ function('s:DOT__dotDetectHeading'), 
-                        \ function('s:DOT__dotExtractTitle'),
-                        \ function('s:DOT__dotExtractLevel'))
+                        \ function('g:DOT_' . sttype . 'DetectHeading'), 
+                        \ function('g:DOT_' . sttype . 'ExtractTitle'),
+                        \ function('g:DOT_' . sttype . 'ExtractLevel'))
     let addedTerminator = 0
     let lastNode = rootNode
     for h in headings
@@ -684,7 +711,7 @@ function! s:DOT__buildNodeTree(buffNum)
     endfor
 
     if !addedTerminator
-        call s:Node_add(lastNode, '', 1, line('$') + 1)
+        call s:Node_add(lastNode, '', 1, len(getbufline(a:buffNum, 1, '$')) + 1)
     endif
 
     return rootNode
@@ -730,11 +757,14 @@ function! s:DOT__createNode(dokozonoLineNum, levelDelta, titlePrompt)
     "echoe 'dest:' . lastNode.title
     "echoe 'lineNumToInsert:' . lineNumToInsert
 
+    let sttype = getbufvar(buffNum, 'DOT_type')
+    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+
     call s:Text_insertHeading(
                 \ lineNumToInsert,
                 \ title,
                 \ node.level + a:levelDelta,
-                \ 's:DOT__dotDecorateHeading')
+                \ 'g:DOT_' . sttype . 'DecorateHeading')
 
     if inTreeBuffer
         call s:DOT_execute(line('.'))
@@ -756,26 +786,31 @@ endfunction
 
 let s:DOT_REGEXP = '^\(\.\+\)\s*\(.*\)$'
 
-function! s:DOT__dotDecorateHeading(title, level)
+function! g:DOT_dotDecorateHeading(title, level)
     return {'lines':[repeat('.', a:level) . ' ' . a:title, '', '', ''], 'cursorPos': [1, 0]}
 endfunction
 
-function! s:DOT__dotDetectHeading(targetLine, targetLineNum, entireLines)
+
+function! g:DOT_dotInit()
+endfunction
+
+
+function! g:DOT_dotDetectHeading(targetLine, targetLineIndex, entireLines)
     return (a:targetLine =~ s:DOT_REGEXP)
 endfunction
 
 
-function! s:DOT__dotExtractTitle(targetLine, targetLineNum, entireLines)
+function! g:DOT_dotExtractTitle(targetLine, targetLineIndex, entireLines)
     return substitute(a:targetLine, s:DOT_REGEXP, '\2', '')
 endfunction
 
 
-function! s:DOT__dotExtractLevel(targetLine, targetLineNum, entireLines)
+function! g:DOT_dotExtractLevel(targetLine, targetLineIndex, entireLines)
     return strlen(substitute(a:targetLine, s:DOT_REGEXP, '\1', ''))
 endfunction
 
 
-function! s:DOT__dotSetHeading(title, level, lineNum)
+function! g:DOT_dotSetHeading(title, level, lineNum)
     call setline(a:lineNum, repeat('.', a:level) . ' ' . a:title)
 endfunction
 
@@ -791,11 +826,11 @@ function! s:Text_collectHeadings(buffNum, headingDetector, titleExtractor, level
     let lineNum = 1
     let headings = []
     for line in lines
-        if a:headingDetector(line, lineNum, lines)
+        if a:headingDetector(line, lineNum - 1, lines)
             call add(headings, {
                      \ 'lineNum': lineNum,
-                     \ 'title': a:titleExtractor(line, lineNum, lines),
-                     \ 'level': a:levelExtractor(line, lineNum, lines),
+                     \ 'title': a:titleExtractor(line, lineNum - 1, lines),
+                     \ 'level': a:levelExtractor(line, lineNum - 1, lines),
                      \ })
         endif
 
