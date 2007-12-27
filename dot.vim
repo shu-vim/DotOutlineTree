@@ -246,7 +246,7 @@ function! s:DOT_jump(dokozonoLineNum)
         let outofNarrowNode = s:Node_getNextNode(s:Node_getLastDescendantNode(node))
 
         silent execute 'Widen'
-        execute node.lineNum . ',' . (outofNarrowNode.lineNum - 1) . 'Narrow'
+        silent execute node.lineNum . ',' . (outofNarrowNode.lineNum - 1) . 'Narrow'
     endif
 
     if g:DOT_closeOnJump | call s:DOT_quit() | endif
