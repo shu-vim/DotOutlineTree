@@ -9,8 +9,8 @@ function! g:DOT_restDetectHeading(targetLine, targetLineIndex, entireLines)
 
     if a:targetLineIndex == len(a:entireLines) - 1 | return 0 | endif
 
-    if a:entireLines[a:targetLineIndex + 1] =~ '^[-=`:.''"~^_*+#]\{2,\}$'
-        if a:targetLine !~ '^[-=`:.''"~^_*+#]\{2,\}$'
+    if a:entireLines[a:targetLineIndex + 1] =~ '^[-=`:.''"~^_*+#]\{5,\}$'
+        if a:targetLine !~ '^[-=`:.''"~^_*+#]\{5,\}$'
             let detected = 1
 
             " add if no entry
