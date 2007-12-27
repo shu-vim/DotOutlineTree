@@ -13,6 +13,10 @@ if !exists('g:DOT_closeOnJump')
     let g:DOT_closeOnJump = 0
 endif
 
+if !exists('g:DOT_useNarrow')
+    let g:DOT_useNarrow = 0
+endif
+
 " defer
 "if !exists('g:DOT_keyMapFunction')
 "    let g:DOT_keyMapFunction = function('g:DOT_setDefaultKeyMap')
@@ -229,10 +233,21 @@ function! s:DOT_jump(dokozonoLineNum)
 
     call s:DOT_update()
 
-    let textBuffLineNum = s:Node_getNthNode(b:DOT_rootNode, a:dokozonoLineNum).lineNum
+    let node = s:Node_getNthNode(b:DOT_rootNode, a:dokozonoLineNum)
+    let textBuffLineNum = node.lineNum
+
     call s:Util_switchCurrentBuffer(b:DOT_textBuffNum, 'new')
+
     execute textBuffLineNum
     normal zt
+
+    " using Narrow
+    if g:DOT_useNarrow && exists(':Narrow')
+        let outofNarrowNode = s:Node_getNextNode(s:Node_getLastDescendantNode(node))
+
+        silent execute 'Widen'
+        execute node.lineNum . ',' . (outofNarrowNode.lineNum - 1) . 'Narrow'
+    endif
 
     if g:DOT_closeOnJump | call s:DOT_quit() | endif
 endfunction
