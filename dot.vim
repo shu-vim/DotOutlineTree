@@ -303,7 +303,7 @@ function! s:DOT_createChildNode(dokozonoLineNum)
 
     if inTreeBuffer
         call s:DOT_execute(line('.'))
-        execute cursorPos
+        execute cursorPos + 1
     endif
 endfunction
 
