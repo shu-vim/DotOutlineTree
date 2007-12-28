@@ -9,8 +9,8 @@ function! g:DOT_restDetectHeading(targetLine, targetLineIndex, entireLines)
 
     if a:targetLineIndex == len(a:entireLines) - 1 | return 0 | endif
 
-    if a:entireLines[a:targetLineIndex + 1] =~ '^[-=`:.''"~^_*+#]\{5,\}$'
-        if a:targetLine !~ '^[-=`:.''"~^_*+#]\{5,\}$'
+    if a:entireLines[a:targetLineIndex + 1] =~ '^[-=`:.''"~^_*+#]\{4,\}$'
+        if a:targetLine !~ '^[-=`:.''"~^_*+#]\{4,\}$'
             let detected = 1
 
             " add if no entry
@@ -46,8 +46,7 @@ endfunction
 
 function! g:DOT_restDecorateHeading(title, level)
     let mark = ':'
-    echoe a:level
     if a:level <= len(b:DOT_restSectionMarks) | let mark = b:DOT_restSectionMarks[a:level - 1] | endif
 
-    return {'lines':[a:title, repeat(mark, 20), '', ''], 'cursorPos': [2, 0]}
+    return {'lines':['', '', a:title, repeat(mark, 20), '', ''], 'cursorPos': [2, 0]}
 endfunction
