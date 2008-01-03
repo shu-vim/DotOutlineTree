@@ -41,8 +41,8 @@ command! -range DOTDeleteNode           :call <SID>DOT_deleteNode(<line1>, <line
 " movement
 command! -range DOTIncLevel             :call <SID>DOT_incLevel(<line1>, <line2>)
 command! -range DOTDecLevel             :call <SID>DOT_decLevel(<line1>, <line2>)
-command! -range DOTFlipUpward           :call <SID>DOT_flipUpward(<line1>, <line2>)
-command! -range DOTFlipDownward         :call <SID>DOT_flipDownward(<line1>, <line2>)
+command!        DOTFlipUpward           :call <SID>DOT_flipUpward(<line1>)
+command!        DOTFlipDownward         :call <SID>DOT_flipDownward(<line1>)
 " undo/redo
 command!        DOTUndo                 :call <SID>DOT_undo()
 command!        DOTRedo                 :call <SID>DOT_redo()
@@ -127,12 +127,18 @@ endfunction
 
 
 function! s:DOT__renderTree(node)
+    setlocal modifiable
+
     " clear
     %delete
+
     " render tree
     call s:DOT__renderTreeInner(a:node)
+
     execute 0
     delete
+
+    setlocal nomodifiable
 endfunction
 
 
@@ -499,43 +505,44 @@ function! s:DOT_undo()
 endfunction
 
 
-function! s:DOT_flipUpward(dokoLineNum1, dokoLineNum2)
+function! s:DOT_flipUpward(dokozonoLineNum)
     call s:DOT_update()
 
     let inTreeBuffer = s:DOT__inTreeBuffer(bufnr('%'))
     if inTreeBuffer
         let cursorPos = line('.')
         let buffNum = b:DOT_textBuffNum
-        let node1 = s:Node_getNthNode(b:DOT_rootNode, a:dokoLineNum1)
-        let node2 = s:Node_getNthNode(b:DOT_rootNode, a:dokoLineNum2)
+        let node = s:Node_getNthNode(b:DOT_rootNode, a:dokozonoLineNum)
     else
         let buffNum = bufnr('%')
-        let node1 = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum1)
-        let node2 = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum2)
+        let node = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokozonoLineNum)
     endif
 
-    let lastNode1 = s:Node_getLastDescendantNode(node1)
-    let lastNode2 = s:Node_getLastDescendantNode(node2)
-    if s:Node_getNodeIndex(b:DOT_rootNode, lastNode1) < s:Node_getNodeIndex(b:DOT_rootNode, lastNode2)
-        let destNode = s:Node_getNextNode(lastNode1)
-    else
-        let destNode = s:Node_getNextNode(lastNode2)
-    endif
-    "let destNode = s:Node_getPrevNode(node1)
+    let lastNode = s:Node_getLastDescendantNode(node)
+    let destNode = s:Node_getPrevNode(node)
+    while destNode isnot b:DOT_rootNode && node.level < s:Node_getPrevNode(destNode).level
+        let destNode = s:Node_getPrevNode(destNode)
+    endwhile
+    let destNode = s:Node_getPrevNode(destNode)
 
     " error
-    if s:DOT__nodeIsTerminator(node1) || s:DOT__nodeIsTerminator(node2)
+    if s:DOT__nodeIsTerminator(node)
         echo 'You can''t move the terminal node.'
         return
     elseif destNode is s:Node_NULL || destNode is b:DOT_rootNode
-        echo 'you can''t move any more.'
+        echo 'you can''t move any nodes over the first node.'
         return
     endif
 
+    " used moving the cursor
+    let srcNodeIndex = s:Node_getNodeIndex(b:DOT_rootNode, node)
+    let lastNodeIndex = s:Node_getNodeIndex(b:DOT_rootNode, lastNode)
+    let destNodeIndex = s:Node_getNodeIndex(b:DOT_rootNode, destNode)
+
     call s:Util_switchCurrentBuffer(buffNum, 'new')
 
-    let firstLineNum = node1.lineNum
-    let lastLineNum = s:Node_getNextNode(node2).lineNum - 1
+    let firstLineNum = node.lineNum
+    let lastLineNum = s:Node_getNextNode(lastNode).lineNum - 1
 
     " copy
     let lines = s:Text_getLines(firstLineNum, lastLineNum)
@@ -548,60 +555,62 @@ function! s:DOT_flipUpward(dokoLineNum1, dokoLineNum2)
 
     if inTreeBuffer
         call s:DOT_execute(line('.'))
-        execute cursorPos - 1
+        execute cursorPos - (srcNodeIndex - destNodeIndex)
     endif
 endfunction
 
 
-function! s:DOT_flipDownward(dokoLineNum1, dokoLineNum2)
+function! s:DOT_flipDownward(dokozonoLineNum)
     call s:DOT_update()
 
     let inTreeBuffer = s:DOT__inTreeBuffer(bufnr('%'))
     if inTreeBuffer
         let cursorPos = line('.')
         let buffNum = b:DOT_textBuffNum
-        let node1 = s:Node_getNthNode(b:DOT_rootNode, a:dokoLineNum1)
-        let node2 = s:Node_getNthNode(b:DOT_rootNode, a:dokoLineNum2)
+        let node = s:Node_getNthNode(b:DOT_rootNode, a:dokozonoLineNum)
     else
         let buffNum = bufnr('%')
-        let node1 = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum1)
-        let node2 = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum2)
+        let node = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum1)
     endif
 
-    let lastNode1 = s:Node_getLastDescendantNode(node1)
-    let lastNode2 = s:Node_getLastDescendantNode(node2)
-    if s:Node_getNodeIndex(b:DOT_rootNode, lastNode1) < s:Node_getNodeIndex(b:DOT_rootNode, lastNode2)
-        let destNode = s:Node_getNextNode(lastNode1)
-    else
-        let destNode = s:Node_getNextNode(lastNode2)
-    endif
+    let lastNode = s:Node_getLastDescendantNode(node)
+    let destNode = s:Node_getNextNode(lastNode)
+    while !s:DOT__nodeIsTerminator(destNode) && node.level < s:Node_getNextNode(destNode).level
+        let destNode = s:Node_getNextNode(destNode)
+    endwhile
+    let destNode = s:Node_getNextNode(destNode)
 
-    " error
-    if s:DOT__nodeIsTerminator(node1) || s:DOT__nodeIsTerminator(node2)
+   " error
+    if s:DOT__nodeIsTerminator(node)
         echo 'You can''t move the terminal node.'
         return
-    elseif s:DOT__nodeIsTerminator(destNode)
+    elseif destNode is s:Node_NULL
         echo 'you can''t move any nodes over the terminal node.'
         return
     endif
 
+    " used moving the cursor
+    let srcNodeIndex = s:Node_getNodeIndex(b:DOT_rootNode, node)
+    let lastNodeIndex = s:Node_getNodeIndex(b:DOT_rootNode, lastNode)
+    let destNodeIndex = s:Node_getNodeIndex(b:DOT_rootNode, destNode)
+
     call s:Util_switchCurrentBuffer(buffNum, 'new')
 
-    let firstLineNum = node1.lineNum
-    let lastLineNum = destNode.lineNum - 1
+    let firstLineNum = node.lineNum
+    let lastLineNum = s:Node_getNextNode(lastNode).lineNum - 1
 
     " copy
     let lines = s:Text_getLines(firstLineNum, lastLineNum)
     " paste
     call s:Text_insertLines(
-                \ s:Node_getNextNode(destNode).lineNum - 1,
+                \ destNode.lineNum - 1,
                 \ lines)
     " delete
     call s:Text_deleteLines(firstLineNum, lastLineNum)
 
     if inTreeBuffer
         call s:DOT_execute(line('.'))
-        execute cursorPos + 1
+        execute cursorPos + (destNodeIndex - lastNodeIndex - 1)
     endif
 endfunction
 
@@ -1010,8 +1019,9 @@ endfunction
 
 
 function! s:Node_getPrevNode(node)
-    let p = a:node.parentNode
+    if a:node is s:Node_NULL | return a:node | endif
 
+    let p = a:node.parentNode
     while p isnot s:Node_NULL && s:Node_getNextNode(p) isnot a:node
         let p = s:Node_getNextNode(p)
     endwhile
