@@ -82,8 +82,10 @@ function! g:DOT_setDefaultKeyMap()
     noremap  <buffer> <silent>  d       :DOTDeleteNode<CR>
 
     " movement
-    noremap  <buffer> <silent>  <<      :DOTDecLevel<CR>
-    noremap  <buffer> <silent>  >>      :DOTIncLevel<CR>
+    nnoremap  <buffer> <silent>  <<     :DOTDecLevel<CR>
+    nnoremap  <buffer> <silent>  >>     :DOTIncLevel<CR>
+    vnoremap  <buffer> <silent>  <      :DOTDecLevel<CR>
+    vnoremap  <buffer> <silent>  >      :DOTIncLevel<CR>
     noremap  <buffer> <silent>  <C-U>   :DOTFlipUpward<CR>
     noremap  <buffer> <silent>  <C-D>   :DOTFlipDownward<CR>
 
@@ -397,8 +399,6 @@ function! s:DOT_incLevel(dokoLineNum1, dokoLineNum2)
         let node2 = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum2)
     endif
 
-    call s:Util_switchCurrentBuffer(buffNum, 'new')
-
     if node1 is b:DOT_rootNode
         echo 'You can''t inclement nothing but nodes.'
         return
@@ -417,6 +417,8 @@ function! s:DOT_incLevel(dokoLineNum1, dokoLineNum2)
 
     let sttype = getbufvar(buffNum, 'DOT_type')
     if strlen(sttype) == 0 | let sttype = 'dot' | endif
+
+    call s:Util_switchCurrentBuffer(buffNum, 'new')
 
     while node isnot lastNode
         call s:Text_setHeading(node.title, node.level + 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
@@ -445,8 +447,6 @@ function! s:DOT_decLevel(dokoLineNum1, dokoLineNum2)
         let node2 = s:Node_getNodeByLineNum(b:DOT_rootNode, a:dokoLineNum2)
     endif
 
-    call s:Util_switchCurrentBuffer(buffNum, 'new')
-
     if node1 is b:DOT_rootNode
         echo 'You can''t declement nothing but nodes.'
         return
@@ -474,6 +474,8 @@ function! s:DOT_decLevel(dokoLineNum1, dokoLineNum2)
 
     let sttype = getbufvar(buffNum, 'DOT_type')
     if strlen(sttype) == 0 | let sttype = 'dot' | endif
+
+    call s:Util_switchCurrentBuffer(buffNum, 'new')
 
     " run
     let node = node1
@@ -519,7 +521,8 @@ function! s:DOT_flipUpward(dokozonoLineNum)
     endif
 
     let lastNode = s:Node_getLastDescendantNode(node)
-    let destNode = s:Node_getPrevNode(node)
+
+    let destNode = node
     while destNode isnot b:DOT_rootNode && node.level < s:Node_getPrevNode(destNode).level
         let destNode = s:Node_getPrevNode(destNode)
     endwhile
@@ -574,6 +577,7 @@ function! s:DOT_flipDownward(dokozonoLineNum)
     endif
 
     let lastNode = s:Node_getLastDescendantNode(node)
+
     let destNode = s:Node_getNextNode(lastNode)
     while !s:DOT__nodeIsTerminator(destNode) && node.level < s:Node_getNextNode(destNode).level
         let destNode = s:Node_getNextNode(destNode)
@@ -791,6 +795,7 @@ function! s:DOT__createNode(dokozonoLineNum, levelDelta, titlePrompt)
                 \ 'g:DOT_' . sttype . 'DecorateHeading')
 
     if inTreeBuffer
+        let cursorPos = s:Node_getNodeIndex(b:DOT_rootNode, lastNode) + 1
         call s:DOT_execute(line('.'))
         execute cursorPos
     endif
