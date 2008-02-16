@@ -1,3 +1,5 @@
+call add(g:DOT_types, 'rest')
+
 function! g:DOT_restInit()
     let b:DOT_restSectionMarks = []
 endfunction

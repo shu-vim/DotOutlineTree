@@ -106,6 +106,7 @@ endfunction
 "--------------------
 
 let s:DOT_BUFFER_PREFIX = 'DotOutlineTree'
+if !exists('g:DOT_types') | let g:DOT_types = [] | endif
 
 
 function! s:DOT_execute(dokozonoLineNum)
@@ -715,11 +716,36 @@ function! s:DOT_dump()
 endfunction
 
 
+function! s:DOT__detectType(buffNum)
+    let lines = getbufline(a:buffNum, 1, '$')
+
+    " defined by the user
+    let type = getbufvar(a:buffNum, 'DOT_type')
+    if index(g:DOT_types, type, 0, 1) != -1 | return type | endif
+
+    " defined by the text buffer
+    let TYPE_DECLARATOR_PATTERN = '\v.*%(%(vi|vim|ex)%([^:]*:)|outline)%([^:]*:)[^<]*\<\s*([^>]+)\s*\>.*' " very magic
+    let i = 0
+    while i < min([&modelines, len(lines)])
+        " downward
+        let type = substitute(lines[i], TYPE_DECLARATOR_PATTERN, '\1', 'i')
+        if index(g:DOT_types, type, 0, 1) != -1 | return type | endif
+
+        " upward
+        let type = substitute(lines[len(lines) - 1 - i], TYPE_DECLARATOR_PATTERN, '\1', 'i')
+        if index(g:DOT_types, type, 0, 1) != -1 | return type | endif
+
+        let i += 1
+    endwhile
+
+    return 'dot' " default type
+endfunction
+
+
 function! s:DOT__buildNodeTree(buffNum)
     let rootNode = s:Node_create(':ROOT:', 0, 0)
 
-    let sttype = getbufvar(a:buffNum, 'DOT_type')
-    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+    let sttype = s:DOT__detectType(a:buffNum)
 
     let Init = function('g:DOT_' . sttype . 'Init')
     call Init()
@@ -741,6 +767,9 @@ function! s:DOT__buildNodeTree(buffNum)
     if !addedTerminator
         call s:Node_add(lastNode, '', 1, len(getbufline(a:buffNum, 1, '$')) + 1)
     endif
+
+    " maybe built the tree successfully
+    call setbufvar(a:buffNum, 'DOT_type', sttype)
 
     return rootNode
 endfunction
