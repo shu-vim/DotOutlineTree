@@ -1,6 +1,3 @@
-" TODO: test
-
-
 if !exists('g:DOT_newMethod')
     let g:DOT_newMethod = 'vnew'
 endif
@@ -302,7 +299,7 @@ function! s:DOT_createChildNode(dokozonoLineNum)
     "echoe 'lineNumToInsert:' . lineNumToInsert
 
     let sttype = getbufvar(buffNum, 'DOT_type')
-    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+    if strlen(sttype) == 0 | let sttype = 'base' | endif
 
     call s:Text_insertHeading(
                 \ lineNumToInsert,
@@ -417,7 +414,7 @@ function! s:DOT_incLevel(dokoLineNum1, dokoLineNum2)
     let node = node1
 
     let sttype = getbufvar(buffNum, 'DOT_type')
-    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+    if strlen(sttype) == 0 | let sttype = 'base' | endif
 
     call s:Util_switchCurrentBuffer(buffNum, 'new')
 
@@ -474,7 +471,7 @@ function! s:DOT_decLevel(dokoLineNum1, dokoLineNum2)
     endwhile
 
     let sttype = getbufvar(buffNum, 'DOT_type')
-    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+    if strlen(sttype) == 0 | let sttype = 'base' | endif
 
     call s:Util_switchCurrentBuffer(buffNum, 'new')
 
@@ -738,7 +735,7 @@ function! s:DOT__detectType(buffNum)
         let i += 1
     endwhile
 
-    return 'dot' " default type
+    return 'base' " default type
 endfunction
 
 
@@ -815,7 +812,7 @@ function! s:DOT__createNode(dokozonoLineNum, levelDelta, titlePrompt)
     "echoe 'lineNumToInsert:' . lineNumToInsert
 
     let sttype = getbufvar(buffNum, 'DOT_type')
-    if strlen(sttype) == 0 | let sttype = 'dot' | endif
+    if strlen(sttype) == 0 | let sttype = 'base' | endif
 
     call s:Text_insertHeading(
                 \ lineNumToInsert,
@@ -844,31 +841,31 @@ endfunction
 
 let s:DOT_REGEXP = '^\(\.\+\)\s*\(.*\)$'
 
-function! g:DOT_dotDecorateHeading(title, level)
+function! g:DOT_baseDecorateHeading(title, level)
     return {'lines':[repeat('.', a:level) . ' ' . a:title, '', '', ''], 'cursorPos': [1, 0]}
 endfunction
 
 
-function! g:DOT_dotInit()
+function! g:DOT_baseInit()
 endfunction
 
 
-function! g:DOT_dotDetectHeading(targetLine, targetLineIndex, entireLines)
+function! g:DOT_baseDetectHeading(targetLine, targetLineIndex, entireLines)
     return (a:targetLine =~ s:DOT_REGEXP)
 endfunction
 
 
-function! g:DOT_dotExtractTitle(targetLine, targetLineIndex, entireLines)
+function! g:DOT_baseExtractTitle(targetLine, targetLineIndex, entireLines)
     return substitute(a:targetLine, s:DOT_REGEXP, '\2', '')
 endfunction
 
 
-function! g:DOT_dotExtractLevel(targetLine, targetLineIndex, entireLines)
+function! g:DOT_baseExtractLevel(targetLine, targetLineIndex, entireLines)
     return strlen(substitute(a:targetLine, s:DOT_REGEXP, '\1', ''))
 endfunction
 
 
-function! g:DOT_dotSetHeading(title, level, lineNum)
+function! g:DOT_baseSetHeading(title, level, lineNum)
     call setline(a:lineNum, repeat('.', a:level) . ' ' . a:title)
 endfunction
 
@@ -1111,5 +1108,12 @@ endfunction
 if !exists('g:DOT_keyMapFunction')
     let g:DOT_keyMapFunction = function('g:DOT_setDefaultKeyMap')
 endif
+
+
+"--------------------
+" making one object file
+"--------------------
+
+"include(dot_rest.vim)
 
 " vim: set fenc=utf-8 ff=unix ts=4 sts=4 sw=4 et : 

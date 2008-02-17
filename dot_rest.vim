@@ -1,4 +1,6 @@
-call add(g:DOT_types, 'rest')
+if index(g:DOT_types, 'rest') == -1
+    call add(g:DOT_types, 'rest')
+endif
 
 function! g:DOT_restInit()
     let b:DOT_restSectionMarks = []
