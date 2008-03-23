@@ -74,6 +74,7 @@ function! g:DOT_setDefaultKeyMap()
     " creation / deletion
     noremap  <buffer> <silent>  <C-H>   :DOTCreateUncleNode<CR>
     noremap  <buffer> <silent>  <C-J>   :DOTCreateSiblingNode<CR>
+    noremap  <buffer> <silent>  o       :DOTCreateSiblingNode<CR>
     noremap  <buffer> <silent>  <C-K>   :DOTCreateChildNode<CR>
     noremap  <buffer> <silent>  <C-L>   :DOTCreateChildNodeL<CR>
     noremap  <buffer> <silent>  d       :DOTDeleteNode<CR>
@@ -211,6 +212,11 @@ function! s:DOT_update()
         call s:DOT__renderTree(b:DOT_rootNode.firstChild)
         execute cursorPos
     endif
+
+    " using Narrow
+    if g:DOT_useNarrow && exists(':Widen')
+        silent! execute 'Widen'
+    endif
 endfunction
 
 
@@ -251,8 +257,8 @@ function! s:DOT_jump(dokozonoLineNum)
     if g:DOT_useNarrow && exists(':Narrow')
         let outofNarrowNode = s:Node_getNextNode(s:Node_getLastDescendantNode(node))
 
-        silent execute 'Widen'
-        silent execute node.lineNum . ',' . (outofNarrowNode.lineNum - 1) . 'Narrow'
+        silent! execute 'Widen'
+        silent! execute node.lineNum . ',' . (outofNarrowNode.lineNum - 1) . 'Narrow'
     endif
 
     if g:DOT_closeOnJump | call s:DOT_quit() | endif
