@@ -21,7 +21,7 @@ endif
 let s:DOT_TASKPAPER_REGEXP = '^\(.\+\)\s*:\s*$'
 
 function! g:DOT_taskpaperDecorateHeading(buffNum, title, level)
-    return {'lines':[repeat('.', a:level) . ' ' . a:title, '', '', ''], 'cursorPos': [1, 0]}
+    return {'lines':[a:title . ':', '', '', ''], 'cursorPos': [1, 0]}
 endfunction
 
 
