@@ -1,9 +1,6 @@
 "
-"TaskPaper plugin for DOT
-"===============================
+"TaskPaper plugin for DOT:
 "
-"Summary 
-"-------
 "ThisIs:
 "   A plugin for DOT.
 "   With this plugin, DOT can make outline tree from TaskPaper.
@@ -18,7 +15,7 @@ if index(g:DOT_types, 'taskpaper') == -1
     call add(g:DOT_types, 'taskpaper')
 endif
 
-let s:DOT_TASKPAPER_REGEXP = '^\(.\+\)\s*:\s*$'
+let s:DOT_TASKPAPER_REGEXP = '^\(.\+\):\s*$'
 
 function! g:DOT_taskpaperDecorateHeading(buffNum, title, level)
     return {'lines':[a:title . ':', '', '', ''], 'cursorPos': [1, 0]}
