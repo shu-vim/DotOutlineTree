@@ -308,6 +308,7 @@ function! s:DOT_createChildNode(dokozonoLineNum)
     if strlen(sttype) == 0 | let sttype = 'base' | endif
 
     call s:Text_insertHeading(
+                \ buffNum,
                 \ lineNumToInsert,
                 \ title,
                 \ node.level + 1,
@@ -425,7 +426,7 @@ function! s:DOT_incLevel(dokoLineNum1, dokoLineNum2)
     call s:Util_switchCurrentBuffer(buffNum, 'new')
 
     while node isnot lastNode
-        call s:Text_setHeading(node.title, node.level + 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
+        call s:Text_setHeading(buffNum, node.title, node.level + 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
         let node = s:Node_getNextNode(node)
     endwhile
 
@@ -484,7 +485,7 @@ function! s:DOT_decLevel(dokoLineNum1, dokoLineNum2)
     " run
     let node = node1
     while node isnot lastNode
-        call s:Text_setHeading(node.title, node.level - 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
+        call s:Text_setHeading(buffNum, node.title, node.level - 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
         let node = s:Node_getNextNode(node)
     endwhile
 
@@ -751,7 +752,7 @@ function! s:DOT__buildNodeTree(buffNum)
     let sttype = s:DOT__detectType(a:buffNum)
 
     let Init = function('g:DOT_' . sttype . 'Init')
-    call Init()
+    call Init(a:buffNum)
     let headings = s:Text_collectHeadings(
                         \ a:buffNum, 
                         \ function('g:DOT_' . sttype . 'DetectHeading'), 
@@ -821,6 +822,7 @@ function! s:DOT__createNode(dokozonoLineNum, levelDelta, titlePrompt)
     if strlen(sttype) == 0 | let sttype = 'base' | endif
 
     call s:Text_insertHeading(
+                \ buffNum,
                 \ lineNumToInsert,
                 \ title,
                 \ node.level + a:levelDelta,
@@ -847,31 +849,31 @@ endfunction
 
 let s:DOT_REGEXP = '^\(\.\+\)\s*\(.*\)$'
 
-function! g:DOT_baseDecorateHeading(title, level)
+function! g:DOT_baseDecorateHeading(buffNum, title, level)
     return {'lines':[repeat('.', a:level) . ' ' . a:title, '', '', ''], 'cursorPos': [1, 0]}
 endfunction
 
 
-function! g:DOT_baseInit()
+function! g:DOT_baseInit(buffNum)
 endfunction
 
 
-function! g:DOT_baseDetectHeading(targetLine, targetLineIndex, entireLines)
+function! g:DOT_baseDetectHeading(buffNum, targetLine, targetLineIndex, entireLines)
     return (a:targetLine =~ s:DOT_REGEXP)
 endfunction
 
 
-function! g:DOT_baseExtractTitle(targetLine, targetLineIndex, entireLines)
+function! g:DOT_baseExtractTitle(buffNum, targetLine, targetLineIndex, entireLines)
     return substitute(a:targetLine, s:DOT_REGEXP, '\2', '')
 endfunction
 
 
-function! g:DOT_baseExtractLevel(targetLine, targetLineIndex, entireLines)
+function! g:DOT_baseExtractLevel(buffNum, targetLine, targetLineIndex, entireLines)
     return strlen(substitute(a:targetLine, s:DOT_REGEXP, '\1', ''))
 endfunction
 
 
-function! g:DOT_baseSetHeading(title, level, lineNum)
+function! g:DOT_baseSetHeading(buffNum, title, level, lineNum)
     call setline(a:lineNum, repeat('.', a:level) . ' ' . a:title)
 endfunction
 
@@ -887,11 +889,11 @@ function! s:Text_collectHeadings(buffNum, headingDetector, titleExtractor, level
     let lineNum = 1
     let headings = []
     for line in lines
-        if a:headingDetector(line, lineNum - 1, lines)
+        if a:headingDetector(a:buffNum, line, lineNum - 1, lines)
             call add(headings, {
                      \ 'lineNum': lineNum,
-                     \ 'title': a:titleExtractor(line, lineNum - 1, lines),
-                     \ 'level': a:levelExtractor(line, lineNum - 1, lines),
+                     \ 'title': a:titleExtractor(a:buffNum, line, lineNum - 1, lines),
+                     \ 'level': a:levelExtractor(a:buffNum, line, lineNum - 1, lines),
                      \ })
         endif
 
@@ -902,8 +904,8 @@ function! s:Text_collectHeadings(buffNum, headingDetector, titleExtractor, level
 endfunction
 
 
-function! s:Text_setHeading(title, level, lineNum, headingSetter)
-    call function(a:headingSetter)(a:title, a:level, a:lineNum)
+function! s:Text_setHeading(buffNum, title, level, lineNum, headingSetter)
+    call function(a:headingSetter)(a:buffNum, a:title, a:level, a:lineNum)
 endfunction
 
 
@@ -923,9 +925,9 @@ function! s:Text_insertLines(lineNum, contents)
 endfunction
 
 
-function! s:Text_insertHeading(lineNum, title, level, headingDecorator)
+function! s:Text_insertHeading(buffNum, lineNum, title, level, headingDecorator)
     let Fn = function(a:headingDecorator)
-    let headingInfo = Fn(a:title, a:level)
+    let headingInfo = Fn(a:buffNum, a:title, a:level)
     call append(a:lineNum, headingInfo.lines)
 
     let pos = getpos('.')
@@ -1123,4 +1125,4 @@ endif
 "include(dot_rest.vim)
 "include(dot_taskpaper.vim)
 
-" vim: set fenc=utf-8 ff=unix ts=4 sts=4 sw=4 et : 
+" vim: set fenc=utf-8 ff=unix ts=4 sts=4 sw=4 et : <base>

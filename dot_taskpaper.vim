@@ -20,31 +20,31 @@ endif
 
 let s:DOT_TASKPAPER_REGEXP = '^\(.\+\)\s*:\s*$'
 
-function! g:DOT_taskpaperDecorateHeading(title, level)
+function! g:DOT_taskpaperDecorateHeading(buffNum, title, level)
     return {'lines':[repeat('.', a:level) . ' ' . a:title, '', '', ''], 'cursorPos': [1, 0]}
 endfunction
 
 
-function! g:DOT_taskpaperInit()
+function! g:DOT_taskpaperInit(buffNum)
 endfunction
 
 
-function! g:DOT_taskpaperDetectHeading(targetLine, targetLineIndex, entireLines)
+function! g:DOT_taskpaperDetectHeading(buffNum, targetLine, targetLineIndex, entireLines)
     return (a:targetLine =~ s:DOT_TASKPAPER_REGEXP)
 endfunction
 
 
-function! g:DOT_taskpaperExtractTitle(targetLine, targetLineIndex, entireLines)
+function! g:DOT_taskpaperExtractTitle(buffNum, targetLine, targetLineIndex, entireLines)
     return substitute(a:targetLine, s:DOT_TASKPAPER_REGEXP, '\1', '')
 endfunction
 
 
-function! g:DOT_taskpaperExtractLevel(targetLine, targetLineIndex, entireLines)
+function! g:DOT_taskpaperExtractLevel(buffNum, targetLine, targetLineIndex, entireLines)
     return 1
 endfunction
 
 
-function! g:DOT_taskpaperSetHeading(title, level, lineNum)
+function! g:DOT_taskpaperSetHeading(buffNum, title, level, lineNum)
     call setline(a:lineNum, a:title . ':')
 endfunction
 "
