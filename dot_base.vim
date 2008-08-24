@@ -1,5 +1,228 @@
+" DotOutlineTree
+"================
+"
+"   After sourcing this plugin, you can make outline of this document by
+"   pressing ':DOT'.
+"
+" Description:
+"-------------
+"
+"   This plugin makes outline of a document.
+"
+"   Currently, it supports three formats:
+"       - reStructuredText
+"       - TaskPaper
+"       - dot-structured text (.. title)
+"
+" Last Change: 2008/08/24
+"-------------
+"
+" Maintainer: Shuhei Kubota <kubota.shuhei+vim@gmail.com>
+"------------
+"
+" Install Description:
+"---------------------
+"
+"   Put this plugin in your plugin directory (e.g. $VIMRUNTIME/plugin). Then
+"   restart VIM.
+"
+" Usage:
+"-------
+"
+" Basic Commands
+"~~~~~~~~~~~~~~~
+"
+"   :DotOutlineTree (:DOT)
+"   :DOTUpdate
+"
+"       The former command constructs an outline tree, and shows an outline
+"       window.  In some cases, even if a buffer is modified, its outline tree
+"       is not refreshed. Use :DOTUpdate(the latter one). But it do scanning
+"       the buffer, structuring nodes, and outputting the data every time.
+"       This makes VIM slow at the moment.
+"
+" Key Mappings (and Commands)
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"
+"       <Enter>:
+"           jumps to the node.
+"           (:DOTJump)
+"
+"       r:
+"           refreshes the outline tree. Same as :RefreshDotOutlineTree.
+"           (:DOTUpdate)
+"
+"       <Esc>:
+"           escapes from the outline window, leaving it shown.
+"           (:DOTEscape)
+"
+"       q:
+"           escapes from the outline window, hiding it.
+"           (:DOTQuit)
+"
+"       <C-H>:
+"           creates an uncle node.
+"           (:DOTCreateUncleNode)
+"
+"       <C-J>, o:
+"           creates a (younger) sibling node.
+"           (:DOTCreateSiblingNode)
+"
+"       <C-K>:
+"           creates a child node.
+"           (:DOTCreateChildNode)
+"
+"       <C-L>:
+"           creates a last child node.
+"           (:DOTCreateChildNodeL)
+"
+"       d:
+"           deletes a node. If the node which the cursor is on  has children,
+"           they are deleted recursively.
+"           (:DOTDeleteNode)
+"
+"       <C-U>:
+"           flips nodes upward.
+"           e.g. (<C-U>ing on a node `hoge')
+"             .foo     .hoge
+"             .hoge => ..piyo
+"             ..piyo   .foo
+"             .bar     .bar
+"           (:DOTFlipUpward)
+"
+"       <C-D>:
+"           flips nodes downward.
+"           e.g. (<C-D>ing on a node `hoge')
+"             .foo     .foo
+"             .hoge => .bar
+"             ..piyo   .hoge
+"             .bar     ..piyo
+"           (:DOTFlipDownward)
+"
+"       <<:
+"           brings up the level of nodes.
+"           e.g.
+"             ...hoge => ..hoge
+"           (:DOTDecLevel)
+"
+"       >>:
+"           brings down the level of nodes.
+"           e.g.
+"             ...hoge => ....hoge
+"           (:DOTIncLevel)
+"
+"       u:
+"           undoes.
+"           This command is forwarded to a text buffer.
+"           (:DOTUndo)
+"
+"       <C-R>:
+"           redoes.
+"           This command is forwarded to a text buffer.
+"           (:DOTRedo)
+"
+"       y:
+"           copies the entire of the node and its descendant nodes.
+"           (:DOTCopy)
+"
+"       p, P:
+"           pastes text.
+"           (:DOTPaste, :DOTPasteP)
+"
+" Formats
+"~~~~~~~~
+"
+" Supported Formats
+"``````````````````
+"
+"   This plugin supports three formats. ('type_name')
+"
+"   - reStructuredText ('rest'):
+"
+"       Supports 'section headers'.
+"
+"       An added new level (child node) is always marked with :::::::, so you
+"       need to modify marks.
+"
+"       TITLE
+"       =====
+"       TEXT
+"       TEXT
+"
+"   - TaskPaper ('taskpaper'):
+"
+"       Supports 'project'. (but nested project is not supported)
+"
+"       PROJECT:
+"       - TASK
+"       - TASK
+"
+"   - dot-structured text ('base' or omitted)
+"
+"       . TITLE
+"       TEXT
+"       TEXT
+"       .. CHILD TITLE
+"       TEXT
+"       TEXT
+"
+" Declaration
+"````````````
+"
+"   You can declare the format of your document.
+"   There are two ways to do it.
+"
+"   1. append a type_name to modeline
+"
+"       like below.
+"
+"       /* vim:set et tw=60: <type_name> */
+"
+"   2. original 'outline' line
+"
+"       outline: <type_name>
+"
+"   In any way, you declare a format (type_name), or 'base' format is used to
+"   parse your document.
+"
+"
+" Variables
+"~~~~~~~~~~
+"
+"   (The right hand value is a default value.)
+"
+"   g:DOT_newMethod = 'vertical new'
+"
+"       Commands above creates a new window. This variable specifies the way the
+"       new window is created.
+"
+"       e.g. 'new'
+"
+"   g:DOT_windowSize = 30
+"
+"       The size of the new window.
+"
+"   g:DOT_closeOnJump = 0
+"
+"       After you decided to jump to some node...
+"
+"           0: the outline window will still be opened
+"              (and a main text window is activated)
+"           1: the window will be closed
+"
+"   g:DOT_useNarrow =0
+"
+"       With this option on, you can narrow to text of the node you chose.
+"       Other text is to be folded.
+"
+"       To enable this feature, you have to get the "narrow" plugin.
+"       http://www.vim.org/scripts/script.php?script_id=2097
+"
+"====
+
+
 if !exists('g:DOT_newMethod')
-    let g:DOT_newMethod = 'vnew'
+    let g:DOT_newMethod = 'vertical new'
 endif
 
 if !exists('g:DOT_windowSize')
@@ -1125,4 +1348,4 @@ endif
 "include(dot_rest.vim)
 "include(dot_taskpaper.vim)
 
-" vim: set fenc=utf-8 ff=unix ts=4 sts=4 sw=4 et : <base>
+" vim: set fenc=utf-8 ff=unix ts=4 sts=4 sw=4 et : <rest>
