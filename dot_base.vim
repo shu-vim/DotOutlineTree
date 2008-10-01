@@ -169,6 +169,12 @@
 " Declaration
 "````````````
 "
+"   DOT detects the type of your document automatically.
+"   So, in most cases, you don't need to tell DOT what type of your document
+"   is.
+"
+"   (YOU CAN SKIP THIS Declaration SECTION)
+"
 "   You can declare the format of your document.
 "   There are two ways to do it.
 "
