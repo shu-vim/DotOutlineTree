@@ -964,10 +964,34 @@ function! s:DOT__detectType(buffNum)
 
         let i += 1
     endwhile
+    if index(g:DOT_types, type, 0, 1) != -1 | return type | endif
+
+    " auto detection
+    let ranks = {}
+    for sttype in g:DOT_types
+        let Init = function('g:DOT_' . sttype . 'Init')
+        call Init(a:buffNum)
+        unlet Init
+        let headings = s:Text_collectHeadings(
+                            \ a:buffNum, 
+                            \ function('g:DOT_' . sttype . 'DetectHeading'), 
+                            \ function('g:DOT_' . sttype . 'ExtractTitle'),
+                            \ function('g:DOT_' . sttype . 'ExtractLevel'))
+        let ranks[sttype] = len(headings)
+    endfor
+
+    let rankList = sort(items(ranks), 's:DOT__rankSortingPred')
+    if len(rankList) > 0
+        return rankList[0][0]
+    endif
 
     return 'base' " default type
 endfunction
 
+" descending order
+function! s:DOT__rankSortingPred(i1, i2)
+    return a:i1[1] == a:i2[1] ? 0 : a:i1[1] < a:i2[1] ? 1 : -1
+endfunction
 
 function! s:DOT__buildNodeTree(buffNum)
     let rootNode = s:Node_create(':ROOT:', 0, 0)
