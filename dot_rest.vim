@@ -32,6 +32,12 @@ function! g:DOT_restDetectHeading(buffNum, targetLine, targetLineIndex, entireLi
 
     let nextLine = s:DOT__restStripCommenterCharacters(a:buffNum, a:entireLines[a:targetLineIndex + 1])
 
+    " ignore an over line of a TITLE
+    if a:targetLineIndex + 3 < len(a:entireLines)
+        let nextLine3 = s:DOT__restStripCommenterCharacters(a:buffNum, a:entireLines[a:targetLineIndex + 3])
+        if nextLine[0] == nextLine3[0] | return 0 | endif
+    endif
+
     if nextLine =~ '^[-=`:.''"~^_*+#]\{2,\}$' && a:targetLine !~ '^[-=`:.''"~^_*+#]\{2,\}$'
         let detected = 1
 
