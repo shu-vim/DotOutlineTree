@@ -987,7 +987,7 @@ function! s:DOT__detectType(buffNum)
     endfor
 
     let rankList = sort(items(ranks), 's:DOT__rankSortingPred')
-    if len(rankList) > 0 && rankList[0][0] > 0
+    if len(rankList) > 0 && rankList[0][1] > 0
         return rankList[0][0]
     endif
 
