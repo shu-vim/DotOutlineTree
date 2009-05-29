@@ -333,7 +333,8 @@ endfunction
 "--------------------
 
 let s:DOT_BUFFER_PREFIX = 'DotOutlineTree'
-if !exists('g:DOT_types') | let g:DOT_types = [] | endif
+let s:DOT_DEFAULT_TYPE = 'base'
+if !exists('g:DOT_types') | let g:DOT_types = [s:DOT_DEFAULT_TYPE] | endif
 
 
 function! s:DOT_execute(dokozonoLineNum)
