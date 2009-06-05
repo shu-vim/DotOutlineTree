@@ -453,7 +453,8 @@ endfunction
 function! s:DOT_escape()
     if !s:DOT__inTreeBuffer(bufnr('%')) | return | endif
 
-    execute b:DOT_textBuffNum . 'wincmd w'
+    let textWinNum = bufwinnr(bufname(b:DOT_textBuffNum))
+    execute textWinNum . 'wincmd w'
 endfunction
 
 
