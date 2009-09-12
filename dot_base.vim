@@ -360,6 +360,9 @@ endfunction
 function! s:DOT__renderTree(node)
     setlocal modifiable
 
+    " stop the yank hijack
+    let old_yank = @"
+
     " clear
     %delete
 
@@ -368,6 +371,8 @@ function! s:DOT__renderTree(node)
 
     execute 0
     delete
+
+    let @" = old_yank
 
     setlocal nomodifiable
 endfunction
