@@ -14,9 +14,6 @@
 "       - TaskPaper
 "       - dot-structured text (.. title)
 "
-" Last Change: 2008/08/24
-"-------------
-"
 " Maintainer: Shuhei Kubota <kubota.shuhei+vim@gmail.com>
 "------------
 "
