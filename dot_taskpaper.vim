@@ -15,7 +15,7 @@ if index(g:DOT_types, 'taskpaper') == -1
     call add(g:DOT_types, 'taskpaper')
 endif
 
-let s:DOT_TASKPAPER_REGEXP = '^\(.\+\):\s*$'
+let s:DOT_TASKPAPER_REGEXP = '\m^\(.\+\):\s*$'
 
 function! g:DOT_taskpaperDecorateHeading(buffNum, title, level)
     return {'lines':[a:title . ':', '', '', ''], 'cursorPos': [1, 0]}
