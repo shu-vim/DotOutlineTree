@@ -18,6 +18,8 @@ if index(g:DOT_types, 'rest') == -1
     call add(g:DOT_types, 'rest')
 endif
 
+let s:DOT_REST_REGEXP = '\m^[-=`:.''"~^_*+#]\{2,\}$'
+
 function! g:DOT_restInit(buffNum)
     call setbufvar(a:buffNum, 'DOT_restSectionMarks', [])
     "let b:DOT_restSectionMarks = []
@@ -38,7 +40,7 @@ function! g:DOT_restDetectHeading(buffNum, targetLine, targetLineIndex, entireLi
         if nextLine[0] == nextLine3[0] | return 0 | endif
     endif
 
-    if nextLine =~ '^[-=`:.''"~^_*+#]\{2,\}$' && a:targetLine !~ '^[-=`:.''"~^_*+#]\{2,\}$'
+    if nextLine =~ s:DOT_REST_REGEXP && a:targetLine !~ s:DOT_REST_REGEXP
         let detected = 1
 
         " add if no entry
