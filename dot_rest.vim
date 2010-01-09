@@ -56,7 +56,8 @@ endfunction
 
 
 function! g:DOT_restExtractTitle(buffNum, targetLine, targetLineIndex, entireLines)
-    return a:targetLine
+    " strip leading spaces
+    return substitute(a:targetLine, '\V\^\%(\s\*\)\(\.\*\)\$', '\1', '')
 endfunction
 
 
