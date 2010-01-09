@@ -1065,6 +1065,9 @@ function! s:DOT__detectType(buffNum)
     endwhile
     if index(g:DOT_types, type, 0, 1) != -1 | return type | endif
 
+    if &filetype == 'rst' || &filetype == 'rest' | return 'rest' | endif
+    if &filetype == 'taskpaper' | return 'taskpaper' | endif
+
     " auto detection
     let ranks = {}
     for sttype in g:DOT_types
@@ -1224,11 +1227,6 @@ endfunction
 
 function! s:DOT_baseGetHeadingMark(buffNum)
     return s:Util_getOption(s:DOT_OPTION_HEADING_MARK, '.')
-    let headingMark = getbufvar(a:buffNum, 'DOT_headingMark')
-    if strlen(headingMark) == 0
-        let headingMark = g:DOT_headingMark
-    endif
-    return headingMark
 endfunction
 
 
