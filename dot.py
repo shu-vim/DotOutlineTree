@@ -4,7 +4,7 @@ import re
 
 importPattern = re.compile(ur'"include\(\s*(.+)\s*\)')
 
-infile = file(u'./dot_base.vim', 'r')
+infile = file(u'./dot_base.vim')
 lines = infile.readlines()
 infile.close()
 
@@ -20,7 +20,7 @@ for i in range(0, len(lines)):
     else:
         resultLines.append(lines[i])
 
-outfile = file(u'./dot.vim', 'w')
+outfile = file(u'./dot.vim', 'wb')
 outfile.writelines(resultLines)
 outfile.close()
 
