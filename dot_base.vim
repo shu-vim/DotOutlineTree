@@ -1509,4 +1509,4 @@ endif
 "include(dot_rest.vim)
 "include(dot_taskpaper.vim)
 
-" vim: set fenc=utf-8 ff=unix ts=4 sts=4 sw=4 et : <rest>
+" vim: set ts=4 sts=4 sw=4 et : <rest>

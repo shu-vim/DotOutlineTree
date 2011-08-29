@@ -45,4 +45,4 @@ function! g:DOT_taskpaperSetHeading(buffNum, title, level, lineNum)
     call setline(a:lineNum, a:title . ':')
 endfunction
 "
-" vim: set et ff=unix fenc=utf-8 sts=4 sw=4 ts=4 : <taskpaper>
+" vim: set et ff=unix sts=4 sw=4 ts=4 : <taskpaper>
