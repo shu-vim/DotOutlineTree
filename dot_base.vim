@@ -23,7 +23,7 @@
 "---------------------
 "
 "   Put this plugin in your plugin directory (e.g. $VIMRUNTIME/plugin). Then
-"   restart VIM.
+"   restart Vim.
 "
 " Usage:
 "-------
@@ -35,7 +35,7 @@
 "
 "       This command constructs an outline tree, and shows an outline window.
 "       But it does scanning the buffer, structuring nodes, and outputting the
-"       data every time. This makes VIM slow at the moment.
+"       data every time. This makes Vim slow at the moment.
 "
 " Key Mappings (and Commands)
 "~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -152,12 +152,15 @@
 "       Supports 'section headers'.
 "
 "       An added new level (child node) is always marked with :::::::, so you
-"       need to modify marks.
+"       need to modify marks. Once you modify marks, DOT uses that marks.
 "
 "       TITLE
 "       =====
 "       TEXT
 "       TEXT
+"
+"       Overline is partly supported. Whether an overline is used or not, is
+"       recorded by levels.
 "
 "   - TaskPaper ('taskpaper'):
 "
@@ -747,8 +750,16 @@ function! s:DOT_incLevel(dokoLineNum1, dokoLineNum2)
 
     call s:Util_switchCurrentBuffer(buffNum, 'new')
 
+    let lineNumDelta = 0
     while node isnot lastNode
-        call s:Text_setHeading(buffNum, node.title, node.level + 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
+        let delta = s:Text_setHeading(
+                    \ buffNum,
+                    \ node.title,
+                    \ node.level,
+                    \ node.level + 1,
+                    \ node.lineNum + lineNumDelta,
+                    \ 'g:DOT_' . sttype . 'DecorateHeading')
+        let lineNumDelta = lineNumDelta + delta
         let node = s:Node_getNextNode(node)
     endwhile
 
@@ -806,8 +817,16 @@ function! s:DOT_decLevel(dokoLineNum1, dokoLineNum2)
 
     " run
     let node = node1
+    let lineNumDelta = 0
     while node isnot lastNode
-        call s:Text_setHeading(buffNum, node.title, node.level - 1, node.lineNum, 'g:DOT_' . sttype . 'SetHeading')
+        let delta = s:Text_setHeading(
+                    \ buffNum, 
+                    \ node.title, 
+                    \ node.level, 
+                    \ node.level - 1, 
+                    \ node.lineNum + lineNumDelta,
+                    \ 'g:DOT_' . sttype . 'DecorateHeading')
+        let lineNumDelta = lineNumDelta + delta
         let node = s:Node_getNextNode(node)
     endwhile
 
@@ -1197,7 +1216,7 @@ endfunction
 
 
 function! g:DOT_baseDecorateHeading(buffNum, title, level)
-    return {'lines':[repeat(s:DOT_baseGetHeadingMark(a:buffNum), a:level) . ' ' . a:title, '', '', ''], 'cursorPos': [1, 0]}
+    return {'marginTop': [], 'lines': [repeat(s:DOT_baseGetHeadingMark(a:buffNum), a:level) . ' ' . a:title], 'marginBottom': ['', '', ''], 'cursorPos': [1, 0]}
 endfunction
 
 
@@ -1244,26 +1263,52 @@ endfunction
 function! s:Text_collectHeadings(buffNum, headingDetector, titleExtractor, levelExtractor)
     let lines = getbufline(a:buffNum, 1, '$')
 
-    let lineNum = 1
     let headings = []
-    for line in lines
-        if a:headingDetector(a:buffNum, line, lineNum - 1, lines)
+    let lineIdx = 0
+    while lineIdx < len(lines)
+        let line = lines[lineIdx]
+
+        "echom 'iterating over headings ... ' . string(lineIdx + 1)
+        let headingLineCount = a:headingDetector(a:buffNum, line, lineIdx, lines)
+        if headingLineCount
             call add(headings, {
-                     \ 'lineNum': lineNum,
-                     \ 'title': a:titleExtractor(a:buffNum, line, lineNum - 1, lines),
-                     \ 'level': a:levelExtractor(a:buffNum, line, lineNum - 1, lines),
+                     \ 'lineNum': lineIdx + 1,
+                     \ 'title': a:titleExtractor(a:buffNum, line, lineIdx, lines),
+                     \ 'level': a:levelExtractor(a:buffNum, line, lineIdx, lines),
                      \ })
+            "echom '  -> headingLineCount: ' . string(headingLineCount)
+            "echom '  -> lineNum: ' . string(lineIdx + 1)
+            "echom '  -> title: ' . a:titleExtractor(a:buffNum, line, lineIdx, lines)
+            "echom '  -> level: ' . a:levelExtractor(a:buffNum, line, lineIdx, lines)
         endif
 
-        let lineNum += 1
-    endfor
+        let lineIdx = lineIdx + headingLineCount + 1
+    endwhile
 
     return headings
 endfunction
 
 
-function! s:Text_setHeading(buffNum, title, level, lineNum, headingSetter)
-    call function(a:headingSetter)(a:buffNum, a:title, a:level, a:lineNum)
+function! s:Text_setHeading(buffNum, title, originalLevel, level, lineNum, headingSetter)
+    let Fn = function(a:headingSetter)
+    let headingInfo = Fn(a:buffNum, a:title, a:level)
+    let originalHeadingInfo = Fn(a:buffNum, a:title, a:originalLevel)
+
+    "echom 'deleting from ' . string(a:lineNum) . ' to ' . string(a:lineNum + len(originalHeadingInfo.lines) - 1)
+    "call getchar()
+
+    call s:Text_deleteLines(a:lineNum, a:lineNum + len(originalHeadingInfo.lines) - 1)
+
+    "redraw
+    "echom 'inserting into ' . string(a:lineNum - 1)
+    "call getchar()
+
+    call s:Text_insertLines(a:lineNum - 1, headingInfo.lines)
+
+    "redraw
+    "echom 'delta ' . string(len(headingInfo.lines) - len(originalHeadingInfo.lines))
+
+    return len(headingInfo.lines) - len(originalHeadingInfo.lines)
 endfunction
 
 
@@ -1286,7 +1331,10 @@ endfunction
 function! s:Text_insertHeading(buffNum, lineNum, title, level, headingDecorator)
     let Fn = function(a:headingDecorator)
     let headingInfo = Fn(a:buffNum, a:title, a:level)
-    call append(a:lineNum, headingInfo.lines)
+
+    call s:Text_insertLines(a:lineNum, headingInfo.marginBottom)
+    call s:Text_insertLines(a:lineNum, headingInfo.lines)
+    call s:Text_insertLines(a:lineNum, headingInfo.marginTop)
 
     let pos = getpos('.')
     let pos[1] = a:lineNum + 1 + headingInfo.cursorPos[0]
