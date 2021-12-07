@@ -289,32 +289,32 @@ if !exists('g:'.s:DOT_OPTION_FOLD_TREE)
 endif
 
 
-command!        DOT                     :call <SID>DOT_execute(<line1>)
-command!        DotOutlineTree          :call <SID>DOT_execute(<line1>)
+command!        DOT                     :call <SID>DOT_execute(line('.'))
+command!        DotOutlineTree          :call <SID>DOT_execute(line('.'))
 " updating
 command!        DOTUpdate               :call <SID>DOT_update()
 " back to the text buffer
-command!        DOTJump                 :call <SID>DOT_jump(<line1>)
+command!        DOTJump                 :call <SID>DOT_jump(line('.'))
 command!        DOTEscape               :call <SID>DOT_escape()
 command!        DOTQuit                 :call <SID>DOT_quit()
 " creation / deletion
-command!        DOTCreateSiblingNode    :call <SID>DOT_createSiblingNode(<line1>)
-command!        DOTCreateChildNode      :call <SID>DOT_createChildNode(<line1>)
-command!        DOTCreateChildNodeL     :call <SID>DOT_createChildNodeL(<line1>)
-command!        DOTCreateUncleNode      :call <SID>DOT_createUncleNode(<line1>)
+command!        DOTCreateSiblingNode    :call <SID>DOT_createSiblingNode(line('.'))
+command!        DOTCreateChildNode      :call <SID>DOT_createChildNode(line('.'))
+command!        DOTCreateChildNodeL     :call <SID>DOT_createChildNodeL(line('.'))
+command!        DOTCreateUncleNode      :call <SID>DOT_createUncleNode(line('.'))
 command! -range DOTDeleteNode           :call <SID>DOT_deleteNode(<line1>, <line2>)
 " movement
 command! -range DOTIncLevel             :call <SID>DOT_incLevel(<line1>, <line2>)
 command! -range DOTDecLevel             :call <SID>DOT_decLevel(<line1>, <line2>)
-command!        DOTFlipUpward           :call <SID>DOT_flipUpward(<line1>)
-command!        DOTFlipDownward         :call <SID>DOT_flipDownward(<line1>)
+command!        DOTFlipUpward           :call <SID>DOT_flipUpward(line('.'))
+command!        DOTFlipDownward         :call <SID>DOT_flipDownward(line('.'))
 " undo/redo
 command!        DOTUndo                 :call <SID>DOT_undo()
 command!        DOTRedo                 :call <SID>DOT_redo()
 " clipboard
 command! -range DOTCopy                 :call <SID>DOT_copy(<line1>, <line2>)
-command!        DOTPaste                :call <SID>DOT_paste_p(<line1>)
-command!        DOTPasteP               :call <SID>DOT_paste_P(<line1>)
+command!        DOTPaste                :call <SID>DOT_paste_p(line('.'))
+command!        DOTPasteP               :call <SID>DOT_paste_P(line('.'))
 " debugging
 command!        DOTDump                 :call <SID>DOT_dump()
 
