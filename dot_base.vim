@@ -1084,6 +1084,10 @@ function! s:DOT__detectType(buffNum)
     endwhile
     if index(g:DOT_types, type, 0, 1) != -1 | return type | endif
 
+    if &filetype == 'markdown'
+        call setbufvar(a:buffNum, s:DOT_OPTION_HEADING_MARK, "#")
+        return 'base'
+    endif
     if &filetype == 'rst' || &filetype == 'rest' | return 'rest' | endif
     if &filetype == 'taskpaper' | return 'taskpaper' | endif
 
