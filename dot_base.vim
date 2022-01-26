@@ -1085,7 +1085,7 @@ function! s:DOT__detectType(buffNum)
     if index(g:DOT_types, type, 0, 1) != -1 | return type | endif
 
     if &filetype == 'markdown'
-        call setbufvar(a:buffNum, s:DOT_OPTION_HEADING_MARK, "#")
+        call setbufvar(a:buffNum, s:DOT_OPTION_HEADING_MARK, '#')
         return 'base'
     endif
     if &filetype == 'rst' || &filetype == 'rest' | return 'rest' | endif
@@ -1122,14 +1122,29 @@ function! s:DOT__buildNodeTree(buffNum)
     let rootNode = s:Node_create(':ROOT:', 0, 0)
 
     let sttype = s:DOT__detectType(a:buffNum)
-
     let Init = function('g:DOT_' . sttype . 'Init')
     call Init(a:buffNum)
     let headings = s:Text_collectHeadings(
-                        \ a:buffNum, 
-                        \ function('g:DOT_' . sttype . 'DetectHeading'), 
+                        \ a:buffNum,
+                        \ function('g:DOT_' . sttype . 'DetectHeading'),
                         \ function('g:DOT_' . sttype . 'ExtractTitle'),
                         \ function('g:DOT_' . sttype . 'ExtractLevel'))
+
+    if len(headings) == 0
+        " retry
+        call setbufvar(a:buffNum, 'DOT_type', '')
+        call setbufvar(a:buffNum, s:DOT_OPTION_HEADING_MARK, '')
+
+        let sttype = s:DOT__detectType(a:buffNum)
+        let Init = function('g:DOT_' . sttype . 'Init')
+        call Init(a:buffNum)
+        let headings = s:Text_collectHeadings(
+                            \ a:buffNum,
+                            \ function('g:DOT_' . sttype . 'DetectHeading'),
+                            \ function('g:DOT_' . sttype . 'ExtractTitle'),
+                            \ function('g:DOT_' . sttype . 'ExtractLevel'))
+    endif
+
     let addedTerminator = 0
     let lastNode = rootNode
     for h in headings
